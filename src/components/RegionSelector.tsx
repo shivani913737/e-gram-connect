@@ -1,30 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { regionData } from "@/data/regions";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const RegionSelector = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [state, setState] = useState("");
   const [district, setDistrict] = useState("");
   const [block, setBlock] = useState("");
   const [village, setVillage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const selectedState = regionData.states.find((s) => s.name === state);
-  const selectedDistrict = selectedState?.districts.find((d) => d.name === district);
-  const selectedBlock = selectedDistrict?.blocks.find((b) => b.name === block);
+  const [states, setStates] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [blocks, setBlocks] = useState<string[]>([]);
+  const [villages, setVillages] = useState<string[]>([]);
 
-  const handleFetch = () => {
+  // Fetch distinct states on mount
+  useEffect(() => {
+    const fetchStates = async () => {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("state")
+        .order("state");
+      if (!error && data) {
+        const unique = [...new Set(data.map((r) => r.state))];
+        setStates(unique);
+      }
+    };
+    fetchStates();
+  }, []);
+
+  // Fetch districts when state changes
+  useEffect(() => {
+    if (!state) { setDistricts([]); return; }
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("regions")
+        .select("district")
+        .eq("state", state)
+        .order("district");
+      if (data) setDistricts([...new Set(data.map((r) => r.district))]);
+    };
+    fetch();
+  }, [state]);
+
+  // Fetch blocks when district changes
+  useEffect(() => {
+    if (!district) { setBlocks([]); return; }
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("regions")
+        .select("block")
+        .eq("state", state)
+        .eq("district", district)
+        .order("block");
+      if (data) setBlocks([...new Set(data.map((r) => r.block))]);
+    };
+    fetch();
+  }, [district, state]);
+
+  // Fetch villages when block changes
+  useEffect(() => {
+    if (!block) { setVillages([]); return; }
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("regions")
+        .select("village")
+        .eq("state", state)
+        .eq("district", district)
+        .eq("block", block)
+        .order("village");
+      if (data) setVillages([...new Set(data.map((r) => r.village))]);
+    };
+    fetch();
+  }, [block, state, district]);
+
+  const handleFetch = async () => {
     if (!state || !district || !block || !village) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate(`/village?state=${state}&district=${district}&block=${block}&village=${village}`);
-    }, 800);
+    
+    // Check if village data exists in DB
+    const { data, error } = await supabase
+      .from("villages")
+      .select("id")
+      .eq("name", village)
+      .eq("state", state)
+      .eq("district", district)
+      .eq("block", block)
+      .maybeSingle();
+
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to fetch village details.", variant: "destructive" });
+      return;
+    }
+
+    navigate(`/village?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&block=${encodeURIComponent(block)}&village=${encodeURIComponent(village)}${data ? `&id=${data.id}` : ""}`);
   };
 
   return (
@@ -42,8 +120,8 @@ const RegionSelector = () => {
           <Select value={state} onValueChange={(v) => { setState(v); setDistrict(""); setBlock(""); setVillage(""); }}>
             <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
             <SelectContent>
-              {regionData.states.map((s) => (
-                <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+              {states.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -54,8 +132,8 @@ const RegionSelector = () => {
           <Select value={district} onValueChange={(v) => { setDistrict(v); setBlock(""); setVillage(""); }} disabled={!state}>
             <SelectTrigger><SelectValue placeholder="Select District" /></SelectTrigger>
             <SelectContent>
-              {selectedState?.districts.map((d) => (
-                <SelectItem key={d.name} value={d.name}>{d.name}</SelectItem>
+              {districts.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -66,8 +144,8 @@ const RegionSelector = () => {
           <Select value={block} onValueChange={(v) => { setBlock(v); setVillage(""); }} disabled={!district}>
             <SelectTrigger><SelectValue placeholder="Select Block" /></SelectTrigger>
             <SelectContent>
-              {selectedDistrict?.blocks.map((b) => (
-                <SelectItem key={b.name} value={b.name}>{b.name}</SelectItem>
+              {blocks.map((b) => (
+                <SelectItem key={b} value={b}>{b}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -78,7 +156,7 @@ const RegionSelector = () => {
           <Select value={village} onValueChange={setVillage} disabled={!block}>
             <SelectTrigger><SelectValue placeholder="Select Village" /></SelectTrigger>
             <SelectContent>
-              {selectedBlock?.villages.map((v) => (
+              {villages.map((v) => (
                 <SelectItem key={v} value={v}>{v}</SelectItem>
               ))}
             </SelectContent>
