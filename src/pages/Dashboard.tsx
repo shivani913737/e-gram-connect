@@ -1,32 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, FileText, BookOpen, LogOut, LayoutDashboard } from "lucide-react";
+import { MapPin, FileText, BookOpen, LogOut, LayoutDashboard, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const dashboardItems = [
-  { icon: MapPin, title: "Village Details", desc: "View and manage village information", to: "/" },
+  { icon: MapPin, title: "Village Details", desc: "View and manage village information", to: "/village" },
   { icon: BookOpen, title: "Government Schemes", desc: "Browse available schemes", to: "/schemes" },
   { icon: FileText, title: "Audit / Records", desc: "View village records and activities", to: "/audit" },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+  const { user, loading, signOut } = useAuth();
 
   useEffect(() => {
-    const stored = localStorage.getItem("egram_user");
-    if (!stored) {
+    if (!loading && !user) {
       navigate("/login");
-      return;
     }
-    setUser(JSON.parse(stored));
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("egram_user");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!user) return null;
 
@@ -37,7 +43,7 @@ const Dashboard = () => {
           <LayoutDashboard className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Welcome, {user.name || user.email}</p>
+            <p className="text-sm text-muted-foreground">Welcome, {user.user_metadata?.full_name || user.email}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout}>

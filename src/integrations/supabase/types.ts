@@ -14,7 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_records: {
+        Row: {
+          activity: string
+          amount: number | null
+          category: string
+          created_at: string
+          id: string
+          recorded_by: string | null
+          status: string
+          village_id: string | null
+        }
+        Insert: {
+          activity: string
+          amount?: number | null
+          category?: string
+          created_at?: string
+          id?: string
+          recorded_by?: string | null
+          status?: string
+          village_id?: string | null
+        }
+        Update: {
+          activity?: string
+          amount?: number | null
+          category?: string
+          created_at?: string
+          id?: string
+          recorded_by?: string | null
+          status?: string
+          village_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_records_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      regions: {
+        Row: {
+          block: string
+          created_at: string
+          district: string
+          id: string
+          state: string
+          village: string
+        }
+        Insert: {
+          block: string
+          created_at?: string
+          district: string
+          id?: string
+          state: string
+          village: string
+        }
+        Update: {
+          block?: string
+          created_at?: string
+          district?: string
+          id?: string
+          state?: string
+          village?: string
+        }
+        Relationships: []
+      }
+      villages: {
+        Row: {
+          area_sq_km: number | null
+          block: string
+          created_at: string
+          description: string | null
+          district: string
+          electricity_coverage: number | null
+          health_centers: number | null
+          id: string
+          name: string
+          population: number | null
+          roads_km: number | null
+          schools: number | null
+          state: string
+          updated_at: string
+          water_sources: number | null
+        }
+        Insert: {
+          area_sq_km?: number | null
+          block: string
+          created_at?: string
+          description?: string | null
+          district: string
+          electricity_coverage?: number | null
+          health_centers?: number | null
+          id?: string
+          name: string
+          population?: number | null
+          roads_km?: number | null
+          schools?: number | null
+          state: string
+          updated_at?: string
+          water_sources?: number | null
+        }
+        Update: {
+          area_sq_km?: number | null
+          block?: string
+          created_at?: string
+          description?: string | null
+          district?: string
+          electricity_coverage?: number | null
+          health_centers?: number | null
+          id?: string
+          name?: string
+          population?: number | null
+          roads_km?: number | null
+          schools?: number | null
+          state?: string
+          updated_at?: string
+          water_sources?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

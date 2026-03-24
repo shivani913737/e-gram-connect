@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Loader2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -15,7 +16,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
       toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
@@ -26,12 +27,21 @@ const Signup = () => {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      localStorage.setItem("egram_user", JSON.stringify({ name, email }));
-      setLoading(false);
-      toast({ title: "Account Created!", description: "You can now log in." });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Signup Failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Account Created!", description: "Please check your email to verify your account, then log in." });
       navigate("/login");
-    }, 1000);
+    }
   };
 
   return (

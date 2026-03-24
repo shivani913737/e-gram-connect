@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Loader2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,20 +15,21 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
       return;
     }
     setLoading(true);
-    // Mock login — will be replaced with Supabase auth
-    setTimeout(() => {
-      localStorage.setItem("egram_user", JSON.stringify({ email }));
-      setLoading(false);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+    } else {
       toast({ title: "Welcome!", description: "Login successful." });
       navigate("/dashboard");
-    }, 1000);
+    }
   };
 
   return (
