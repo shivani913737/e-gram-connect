@@ -465,7 +465,7 @@ const VillageDetails = () => {
                 <Card className="border-primary/10">
                   <CardContent className="pt-5 text-center">
                     <p className="text-xs text-muted-foreground">Spent</p>
-                    <p className="text-xl font-bold text-green-600">{spentFunds > 0 ? formatCurrency(spentFunds) : "—"}</p>
+                    <p className="text-xl font-bold text-primary">{spentFunds > 0 ? formatCurrency(spentFunds) : "—"}</p>
                   </CardContent>
                 </Card>
                 <Card className="border-primary/10">
