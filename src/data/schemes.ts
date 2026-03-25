@@ -6,6 +6,7 @@ export interface Scheme {
   eligibility: string;
   benefits: string;
   category: string;
+  applicationProcess: string;
 }
 
 export const schemes: Scheme[] = [
@@ -17,6 +18,7 @@ export const schemes: Scheme[] = [
     eligibility: "Households without a pucca house, SC/ST, minorities, and EWS categories.",
     benefits: "Financial assistance of ₹1.20 lakh to ₹1.30 lakh for house construction in plain and hilly areas.",
     category: "Housing",
+    applicationProcess: "Apply through Gram Panchayat or Common Service Center (CSC). Submit Aadhaar, income certificate, and land documents.",
   },
   {
     id: "mgnrega",
@@ -26,6 +28,7 @@ export const schemes: Scheme[] = [
     eligibility: "Any adult member of a rural household willing to do unskilled manual work.",
     benefits: "100 days guaranteed employment, daily wages as per state notification.",
     category: "Employment",
+    applicationProcess: "Register at the Gram Panchayat with a passport-size photo. Receive a Job Card within 15 days.",
   },
   {
     id: "pmkisan",
@@ -35,6 +38,7 @@ export const schemes: Scheme[] = [
     eligibility: "All land-holding farmer families with cultivable land.",
     benefits: "₹6,000 per year in three installments of ₹2,000 each.",
     category: "Agriculture",
+    applicationProcess: "Register online at pmkisan.gov.in or through CSC with Aadhaar, bank account, and land records.",
   },
   {
     id: "swachh",
@@ -44,15 +48,17 @@ export const schemes: Scheme[] = [
     eligibility: "All rural households without a toilet.",
     benefits: "₹12,000 incentive for construction of individual household toilets.",
     category: "Sanitation",
+    applicationProcess: "Apply through Gram Panchayat. Submit BPL card or income proof. Incentive released after toilet construction and verification.",
   },
   {
     id: "jjm",
     name: "Jal Jeevan Mission",
     ministry: "Ministry of Jal Shakti",
-    description: "Aims to provide safe and adequate drinking water through individual household tap connections to every rural household by 2024.",
+    description: "Aims to provide safe and adequate drinking water through individual household tap connections to every rural household.",
     eligibility: "All rural households.",
     benefits: "Functional household tap connections providing 55 litres per capita per day.",
     category: "Water",
+    applicationProcess: "Implemented through Gram Panchayat. Village Water & Sanitation Committee (VWSC) plans and monitors connections.",
   },
   {
     id: "pmgsy",
@@ -62,5 +68,66 @@ export const schemes: Scheme[] = [
     eligibility: "Unconnected habitations with population of 500+ (250+ in hilly areas).",
     benefits: "All-weather road connectivity to eligible habitations.",
     category: "Infrastructure",
+    applicationProcess: "Proposals prepared by state government. No individual application needed — coverage is planned centrally.",
+  },
+  {
+    id: "ayushman",
+    name: "Ayushman Bharat - PMJAY",
+    ministry: "Ministry of Health & Family Welfare",
+    description: "Provides health insurance cover of ₹5 lakh per family per year for secondary and tertiary hospitalization.",
+    eligibility: "Families identified based on SECC 2011 database — deprived rural and urban families.",
+    benefits: "₹5 lakh annual health cover, cashless treatment at empanelled hospitals.",
+    category: "Health",
+    applicationProcess: "Check eligibility at mera.pmjay.gov.in. Visit CSC or empanelled hospital with Aadhaar and ration card to get Ayushman card.",
+  },
+  {
+    id: "pmuy",
+    name: "Pradhan Mantri Ujjwala Yojana",
+    ministry: "Ministry of Petroleum & Natural Gas",
+    description: "Provides free LPG connections to women from BPL households to replace unclean cooking fuels.",
+    eligibility: "Women aged 18+ from BPL households not having LPG connection.",
+    benefits: "Free LPG connection with ₹1,600 subsidy, first refill and stove provided free.",
+    category: "Energy",
+    applicationProcess: "Apply at nearest LPG distributor with BPL certificate, Aadhaar, Jan Dhan bank account, and passport-size photo.",
+  },
+  {
+    id: "dbt",
+    name: "Direct Benefit Transfer (DBT)",
+    ministry: "Ministry of Finance",
+    description: "Transfers subsidies and benefits directly to beneficiary bank accounts, reducing leakages and delays.",
+    eligibility: "All beneficiaries of government welfare schemes linked to Aadhaar.",
+    benefits: "Direct transfer of subsidies — LPG, fertilizer, scholarships, pensions — to bank accounts.",
+    category: "Finance",
+    applicationProcess: "Link Aadhaar to bank account and relevant scheme. Benefits auto-credited upon eligibility verification.",
+  },
+  {
+    id: "pmfby",
+    name: "Pradhan Mantri Fasal Bima Yojana",
+    ministry: "Ministry of Agriculture",
+    description: "Comprehensive crop insurance scheme covering yield losses due to non-preventable natural risks.",
+    eligibility: "All farmers including sharecroppers and tenant farmers growing notified crops.",
+    benefits: "Insurance coverage at low premium — 2% for Kharif, 1.5% for Rabi, 5% for commercial crops.",
+    category: "Agriculture",
+    applicationProcess: "Apply through bank, CSC, or PMFBY portal within the crop sowing window with land records and bank details.",
+  },
+  {
+    id: "ddugky",
+    name: "DDU-GKY (Deen Dayal Upadhyaya Grameen Kaushalya Yojana)",
+    ministry: "Ministry of Rural Development",
+    description: "Skill development and placement program for rural youth from poor families aged 15–35.",
+    eligibility: "Rural youth aged 15-35 from families in SECC 2011 database. SC/ST/Women/PwD up to age 45.",
+    benefits: "Free skill training, certification, and guaranteed placement with minimum ₹6,000/month salary.",
+    category: "Employment",
+    applicationProcess: "Register at Block Development Office or DDU-GKY training center. No fee required — training and placement are free.",
+  },
+  {
+    id: "nsap",
+    name: "National Social Assistance Programme (NSAP)",
+    ministry: "Ministry of Rural Development",
+    description: "Social security pensions for elderly, widows, and disabled persons from BPL families.",
+    eligibility: "BPL persons — Old age (60+), Widows (40-59), Disabled (18-59 with 80%+ disability).",
+    benefits: "Monthly pension of ₹200-₹500 from central government, supplemented by state contribution.",
+    category: "Social Security",
+    applicationProcess: "Apply at Gram Panchayat or Block office with age proof, BPL card, Aadhaar, and bank passbook.",
   },
 ];
