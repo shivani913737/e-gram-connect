@@ -6,11 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, MapPin, Users, Droplets, Zap, GraduationCap, Activity,
-  Building2, Route, Phone, User, ChevronRight, Landmark, TrendingUp
+  Building2, Route, Phone, User, ChevronRight, Landmark, TrendingUp,
+  Home, Wheat, IndianRupee
 } from "lucide-react";
+
+import sarpanchMale from "@/assets/officials/sarpanch-male.png";
+import sarpanchFemale from "@/assets/officials/sarpanch-female.png";
+import officerMale from "@/assets/officials/officer-male.png";
+import officerFemale from "@/assets/officials/officer-female.png";
 
 interface VillageData {
   id: string;
@@ -39,21 +45,51 @@ interface Official {
   image_url: string | null;
 }
 
+interface AuditRecord {
+  id: string;
+  activity: string;
+  amount: number | null;
+  category: string;
+  status: string;
+  created_at: string;
+}
+
+const getOfficialImage = (designation: string, gender: string | null) => {
+  const isFemale = gender?.toLowerCase() === "female";
+  if (designation === "Sarpanch" || designation === "Up-Sarpanch") {
+    return isFemale ? sarpanchFemale : sarpanchMale;
+  }
+  return isFemale ? officerFemale : officerMale;
+};
+
+const designationColor = (d: string) => {
+  switch (d) {
+    case "Sarpanch": return "bg-primary text-primary-foreground";
+    case "Up-Sarpanch": return "bg-accent text-accent-foreground";
+    case "Gram Sevak": return "bg-secondary text-secondary-foreground";
+    default: return "bg-muted text-muted-foreground";
+  }
+};
+
+const formatCurrency = (n: number) =>
+  `₹${n.toLocaleString("en-IN")}`;
+
 const VillageDetails = () => {
   const [params] = useSearchParams();
-  const state = params.get("state") || "N/A";
-  const district = params.get("district") || "N/A";
-  const block = params.get("block") || "N/A";
-  const village = params.get("village") || "N/A";
+  const state = params.get("state") || "";
+  const district = params.get("district") || "";
+  const block = params.get("block") || "";
+  const village = params.get("village") || "";
   const id = params.get("id");
 
   const [data, setData] = useState<VillageData | null>(null);
   const [officials, setOfficials] = useState<Official[]>([]);
+  const [auditRecords, setAuditRecords] = useState<AuditRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const fetchVillage = async () => {
+    const fetchAll = async () => {
       setLoading(true);
       let query = supabase.from("villages").select("*");
 
@@ -77,17 +113,16 @@ const VillageDetails = () => {
 
       setData(result);
 
-      // Fetch officials
-      const { data: offs } = await supabase
-        .from("village_officials")
-        .select("*")
-        .eq("village_id", result.id)
-        .order("designation");
+      const [officialsRes, auditRes] = await Promise.all([
+        supabase.from("village_officials").select("*").eq("village_id", result.id).order("designation"),
+        supabase.from("audit_records").select("*").eq("village_id", result.id).order("created_at", { ascending: false }).limit(10),
+      ]);
 
-      if (offs) setOfficials(offs as Official[]);
+      if (officialsRes.data) setOfficials(officialsRes.data as Official[]);
+      if (auditRes.data) setAuditRecords(auditRes.data as AuditRecord[]);
       setLoading(false);
     };
-    fetchVillage();
+    fetchAll();
   }, [id, village, state, district, block]);
 
   if (loading) {
@@ -95,33 +130,28 @@ const VillageDetails = () => {
       <div className="mx-auto max-w-5xl px-4 py-12 space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-64" />
       </div>
     );
   }
 
+  const households = data?.population ? Math.round(data.population / 4.5) : null;
+
   const stats = data
     ? [
-        { icon: Users, label: "Population", value: data.population?.toLocaleString() ?? "N/A" },
-        { icon: Droplets, label: "Water Sources", value: String(data.water_sources ?? "N/A") },
-        { icon: Zap, label: "Electricity", value: data.electricity_coverage != null ? `${data.electricity_coverage}%` : "N/A" },
-        { icon: GraduationCap, label: "Schools", value: String(data.schools ?? "N/A") },
-        { icon: Activity, label: "Health Centers", value: String(data.health_centers ?? "N/A") },
+        { icon: Users, label: "Population", value: data.population?.toLocaleString() ?? "—" },
+        { icon: Home, label: "Households", value: households?.toLocaleString() ?? "—" },
+        { icon: Zap, label: "Electricity", value: data.electricity_coverage != null ? `${data.electricity_coverage}%` : "—" },
+        { icon: GraduationCap, label: "Schools", value: String(data.schools ?? "—") },
+        { icon: Activity, label: "Health Centers", value: String(data.health_centers ?? "—") },
       ]
     : [];
 
-  const getInitials = (name: string) =>
-    name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-
-  const designationColor = (d: string) => {
-    if (d === "Sarpanch") return "bg-primary text-primary-foreground";
-    if (d === "Up-Sarpanch") return "bg-secondary text-secondary-foreground";
-    return "bg-muted text-muted-foreground";
-  };
+  const totalFunds = auditRecords.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const spentFunds = auditRecords.filter(r => r.status === "Completed" || r.status === "Disbursed").reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const pendingFunds = totalFunds - spentFunds;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
@@ -159,8 +189,11 @@ const VillageDetails = () => {
         <Card className="border-destructive/30">
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
-              No detailed data found for <strong>{village}</strong>.
+              No detailed data found for <strong>{village || "this village"}</strong>. Please select a valid region.
             </p>
+            <Link to="/">
+              <Button className="mt-4">Go to Region Selector</Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
@@ -178,7 +211,7 @@ const VillageDetails = () => {
             ))}
           </div>
 
-          {/* Map / Location Visual */}
+          {/* Location Hierarchy */}
           <Card className="mb-8 overflow-hidden border-primary/10">
             <CardContent className="p-0">
               <div className="bg-secondary/5 p-6">
@@ -213,11 +246,12 @@ const VillageDetails = () => {
 
           {/* Tabbed Sections */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="people">People</TabsTrigger>
               <TabsTrigger value="facilities">Facilities</TabsTrigger>
               <TabsTrigger value="development">Development</TabsTrigger>
+              <TabsTrigger value="funds">Funds</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -232,23 +266,48 @@ const VillageDetails = () => {
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {data?.description || "No description available."}
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
                     <div className="rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Population</p>
-                      <p className="text-lg font-bold">{data?.population?.toLocaleString() ?? "N/A"}</p>
+                      <p className="text-lg font-bold">{data?.population?.toLocaleString() ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Households</p>
+                      <p className="text-lg font-bold">{households?.toLocaleString() ?? "—"}</p>
                     </div>
                     <div className="rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Area</p>
-                      <p className="text-lg font-bold">{data?.area_sq_km ?? "N/A"} km²</p>
+                      <p className="text-lg font-bold">{data?.area_sq_km ?? "—"} km²</p>
                     </div>
                     <div className="rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Density</p>
                       <p className="text-lg font-bold">
                         {data?.population && data?.area_sq_km
                           ? Math.round(data.population / data.area_sq_km)
-                          : "N/A"}{" "}
+                          : "—"}{" "}
                         /km²
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Agriculture & Resources */}
+                  <div className="mt-6">
+                    <h4 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                      <Wheat className="h-4 w-4 text-primary" /> Agriculture & Resources
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Main Crops</p>
+                        <p className="text-sm font-medium">Rice, Wheat, Pulses</p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Irrigation</p>
+                        <p className="text-sm font-medium">{data?.water_sources ?? 0} sources</p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Cultivable Land</p>
+                        <p className="text-sm font-medium">{data?.area_sq_km ? (data.area_sq_km * 0.6).toFixed(1) : "—"} km²</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -269,38 +328,38 @@ const VillageDetails = () => {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {officials.map((o) => (
-                    <Card key={o.id} className="border-primary/10 hover:shadow-md transition-shadow">
-                      <CardContent className="pt-5 pb-4">
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-12 w-12 shrink-0">
-                            <AvatarFallback className={designationColor(o.designation)}>
-                              {getInitials(o.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm truncate">{o.name}</p>
-                            <Badge variant="outline" className="text-[10px] mt-0.5">
-                              {o.designation}
-                            </Badge>
-                          </div>
+                    <Card key={o.id} className="border-primary/10 hover:shadow-md transition-shadow overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className={`px-4 py-3 ${designationColor(o.designation)}`}>
+                          <Badge variant="secondary" className="text-[10px] bg-background/20 text-inherit border-0">
+                            {o.designation}
+                          </Badge>
                         </div>
-                        <div className="mt-3 grid grid-cols-2 gap-y-1.5 text-xs text-muted-foreground">
-                          {o.age && (
-                            <span>Age: <strong className="text-foreground">{o.age}</strong></span>
-                          )}
-                          {o.gender && (
-                            <span>Gender: <strong className="text-foreground">{o.gender}</strong></span>
-                          )}
-                          {o.education && (
-                            <span className="col-span-2">Education: <strong className="text-foreground">{o.education}</strong></span>
+                        <div className="p-4">
+                          <div className="flex items-start gap-3">
+                            <img
+                              src={getOfficialImage(o.designation, o.gender)}
+                              alt={o.name}
+                              className="h-16 w-16 rounded-full object-cover border-2 border-primary/20 shrink-0"
+                              loading="lazy"
+                              width={64}
+                              height={64}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold truncate">{o.name}</p>
+                              <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+                                {o.age && <span className="block">Age: <strong className="text-foreground">{o.age}</strong> • {o.gender}</span>}
+                                {o.education && <span className="block">📚 {o.education}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          {o.contact && (
+                            <div className="mt-3 flex items-center gap-1.5 text-xs text-primary border-t pt-2">
+                              <Phone className="h-3 w-3" />
+                              <span>{o.contact}</span>
+                            </div>
                           )}
                         </div>
-                        {o.contact && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-primary">
-                            <Phone className="h-3 w-3" />
-                            <span>{o.contact}</span>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -319,6 +378,8 @@ const VillageDetails = () => {
                   { icon: Activity, label: "Health Centers", value: data?.health_centers, desc: "PHCs, sub-centers, and health facilities" },
                   { icon: Droplets, label: "Water Sources", value: data?.water_sources, desc: "Borewells, handpumps, and tap connections" },
                   { icon: Landmark, label: "Panchayat Office", value: 1, desc: "Gram Panchayat administrative office" },
+                  { icon: Route, label: "Road Network", value: `${data?.roads_km ?? 0} km`, desc: "Total paved and unpaved roads" },
+                  { icon: Zap, label: "Electricity", value: `${data?.electricity_coverage ?? 0}%`, desc: "Household electrification coverage" },
                 ].map((f) => (
                   <Card key={f.label} className="border-primary/10">
                     <CardContent className="pt-5 flex items-start gap-4">
@@ -327,7 +388,7 @@ const VillageDetails = () => {
                       </div>
                       <div>
                         <p className="font-semibold">{f.label}</p>
-                        <p className="text-2xl font-bold text-primary">{f.value ?? "N/A"}</p>
+                        <p className="text-2xl font-bold text-primary">{f.value ?? "—"}</p>
                         <p className="text-xs text-muted-foreground mt-1">{f.desc}</p>
                       </div>
                     </CardContent>
@@ -342,61 +403,124 @@ const VillageDetails = () => {
                 <TrendingUp className="h-5 w-5 text-primary" /> Development Data
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                {/* Electricity */}
                 <Card className="border-primary/10">
                   <CardContent className="pt-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Zap className="h-5 w-5 text-primary" />
                       <span className="font-semibold">Electricity Coverage</span>
                     </div>
-                    <div className="relative h-4 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-full bg-primary transition-all"
-                        style={{ width: `${data?.electricity_coverage ?? 0}%` }}
-                      />
-                    </div>
-                    <p className="text-right text-sm font-bold text-primary mt-1">
-                      {data?.electricity_coverage ?? 0}%
-                    </p>
+                    <Progress value={data?.electricity_coverage ?? 0} className="h-3" />
+                    <p className="text-right text-sm font-bold text-primary mt-1">{data?.electricity_coverage ?? 0}%</p>
                   </CardContent>
                 </Card>
 
-                {/* Roads */}
+                <Card className="border-primary/10">
+                  <CardContent className="pt-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Droplets className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">Water Supply Coverage</span>
+                    </div>
+                    <Progress value={Math.min(100, (data?.water_sources ?? 0) * 8)} className="h-3" />
+                    <p className="text-right text-sm font-bold text-primary mt-1">{data?.water_sources ?? 0} active sources</p>
+                  </CardContent>
+                </Card>
+
                 <Card className="border-primary/10">
                   <CardContent className="pt-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Route className="h-5 w-5 text-primary" />
                       <span className="font-semibold">Road Connectivity</span>
                     </div>
-                    <p className="text-3xl font-bold text-primary">{data?.roads_km ?? "N/A"} km</p>
+                    <p className="text-3xl font-bold text-primary">{data?.roads_km ?? "—"} km</p>
                     <p className="text-xs text-muted-foreground mt-1">Total paved road network</p>
                   </CardContent>
                 </Card>
 
-                {/* Water */}
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Droplets className="h-5 w-5 text-primary" />
-                      <span className="font-semibold">Water Infrastructure</span>
-                    </div>
-                    <p className="text-3xl font-bold text-primary">{data?.water_sources ?? "N/A"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Active water sources available</p>
-                  </CardContent>
-                </Card>
-
-                {/* Area */}
                 <Card className="border-primary/10">
                   <CardContent className="pt-5">
                     <div className="flex items-center gap-2 mb-3">
                       <MapPin className="h-5 w-5 text-primary" />
                       <span className="font-semibold">Geographic Area</span>
                     </div>
-                    <p className="text-3xl font-bold text-primary">{data?.area_sq_km ?? "N/A"} km²</p>
+                    <p className="text-3xl font-bold text-primary">{data?.area_sq_km ?? "—"} km²</p>
                     <p className="text-xs text-muted-foreground mt-1">Total village area</p>
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* Funds Tab */}
+            <TabsContent value="funds" className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <IndianRupee className="h-5 w-5 text-primary" /> Panchayat Funds
+              </h3>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Card className="border-primary/10">
+                  <CardContent className="pt-5 text-center">
+                    <p className="text-xs text-muted-foreground">Total Funds</p>
+                    <p className="text-xl font-bold text-primary">{totalFunds > 0 ? formatCurrency(totalFunds) : "—"}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary/10">
+                  <CardContent className="pt-5 text-center">
+                    <p className="text-xs text-muted-foreground">Spent</p>
+                    <p className="text-xl font-bold text-primary">{spentFunds > 0 ? formatCurrency(spentFunds) : "—"}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary/10">
+                  <CardContent className="pt-5 text-center">
+                    <p className="text-xs text-muted-foreground">Remaining</p>
+                    <p className="text-xl font-bold text-muted-foreground">{pendingFunds > 0 ? formatCurrency(pendingFunds) : "—"}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {totalFunds > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Spending Utilization</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Progress value={totalFunds > 0 ? (spentFunds / totalFunds) * 100 : 0} className="h-3" />
+                    <p className="text-right text-sm text-muted-foreground mt-1">
+                      {totalFunds > 0 ? Math.round((spentFunds / totalFunds) * 100) : 0}% utilized
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {auditRecords.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Recent Expenditure Records</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {auditRecords.map((r) => (
+                        <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
+                          <div>
+                            <p className="text-sm font-medium">{r.activity}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-IN")} • {r.category}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold">{r.amount ? formatCurrency(r.amount) : "—"}</p>
+                            <Badge variant={r.status === "Completed" || r.status === "Disbursed" ? "secondary" : "outline"} className="text-[10px]">
+                              {r.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No expenditure records available for this village yet.
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </>
