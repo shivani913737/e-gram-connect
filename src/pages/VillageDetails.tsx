@@ -471,7 +471,7 @@ const VillageDetails = () => {
                 <Card className="border-primary/10">
                   <CardContent className="pt-5 text-center">
                     <p className="text-xs text-muted-foreground">Remaining</p>
-                    <p className="text-xl font-bold text-amber-600">{pendingFunds > 0 ? formatCurrency(pendingFunds) : "—"}</p>
+                    <p className="text-xl font-bold text-muted-foreground">{pendingFunds > 0 ? formatCurrency(pendingFunds) : "—"}</p>
                   </CardContent>
                 </Card>
               </div>
