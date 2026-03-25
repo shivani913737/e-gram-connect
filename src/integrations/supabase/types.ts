@@ -103,6 +103,53 @@ export type Database = {
         }
         Relationships: []
       }
+      village_officials: {
+        Row: {
+          age: number | null
+          contact: string | null
+          created_at: string
+          designation: string
+          education: string | null
+          gender: string | null
+          id: string
+          image_url: string | null
+          name: string
+          village_id: string
+        }
+        Insert: {
+          age?: number | null
+          contact?: string | null
+          created_at?: string
+          designation: string
+          education?: string | null
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          village_id: string
+        }
+        Update: {
+          age?: number | null
+          contact?: string | null
+          created_at?: string
+          designation?: string
+          education?: string | null
+          gender?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          village_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "village_officials_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       villages: {
         Row: {
           area_sq_km: number | null
