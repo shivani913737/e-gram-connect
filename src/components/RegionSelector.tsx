@@ -85,7 +85,6 @@ const RegionSelector = () => {
     if (!state || !district || !block || !village) return;
     setLoading(true);
     
-    // Check if village data exists in DB
     const { data, error } = await supabase
       .from("villages")
       .select("id")
@@ -101,6 +100,9 @@ const RegionSelector = () => {
       toast({ title: "Error", description: "Failed to fetch village details.", variant: "destructive" });
       return;
     }
+
+    // Save selection to localStorage
+    localStorage.setItem("selectedRegion", JSON.stringify({ state, district, block, village, id: data?.id ?? null }));
 
     navigate(`/village?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&block=${encodeURIComponent(block)}&village=${encodeURIComponent(village)}${data ? `&id=${data.id}` : ""}`);
   };

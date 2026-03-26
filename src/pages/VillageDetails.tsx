@@ -168,6 +168,23 @@ const VillageDetails = () => {
     );
   }
 
+  if (noSelection) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <MapPin className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">Please Select a Village First</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Choose your state, district, block, and village to view detailed information.
+        </p>
+        <Link to="/">
+          <Button>Go to Select Region</Button>
+        </Link>
+      </div>
+    );
+  }
+
   const households = data?.population ? Math.round(data.population / 4.5) : null;
 
   const stats = data
