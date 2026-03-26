@@ -75,22 +75,47 @@ const formatCurrency = (n: number) =>
   `₹${n.toLocaleString("en-IN")}`;
 
 const VillageDetails = () => {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const [data, setData] = useState<VillageData | null>(null);
+  const [officials, setOfficials] = useState<Official[]>([]);
+  const [auditRecords, setAuditRecords] = useState<AuditRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [noSelection, setNoSelection] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+
+  // Resolve params: URL > localStorage
   const state = params.get("state") || "";
   const district = params.get("district") || "";
   const block = params.get("block") || "";
   const village = params.get("village") || "";
   const id = params.get("id");
 
-  const [data, setData] = useState<VillageData | null>(null);
-  const [officials, setOfficials] = useState<Official[]>([]);
-  const [auditRecords, setAuditRecords] = useState<AuditRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-
   useEffect(() => {
+    // If no URL params, try to restore from localStorage
+    if (!state && !village) {
+      const saved = localStorage.getItem("selectedRegion");
+      if (saved) {
+        try {
+          const r = JSON.parse(saved);
+          const newParams: Record<string, string> = {};
+          if (r.state) newParams.state = r.state;
+          if (r.district) newParams.district = r.district;
+          if (r.block) newParams.block = r.block;
+          if (r.village) newParams.village = r.village;
+          if (r.id) newParams.id = r.id;
+          setParams(newParams, { replace: true });
+          return; // will re-run with new params
+        } catch { /* ignore */ }
+      }
+      // No saved selection either
+      setLoading(false);
+      setNoSelection(true);
+      return;
+    }
+
     const fetchAll = async () => {
       setLoading(true);
+      setNoSelection(false);
       let query = supabase.from("villages").select("*");
 
       if (id) {
@@ -113,6 +138,12 @@ const VillageDetails = () => {
 
       setData(result);
 
+      // Save/update localStorage
+      localStorage.setItem("selectedRegion", JSON.stringify({
+        state: result.state, district: result.district, block: result.block,
+        village: result.name, id: result.id,
+      }));
+
       const [officialsRes, auditRes] = await Promise.all([
         supabase.from("village_officials").select("*").eq("village_id", result.id).order("designation"),
         supabase.from("audit_records").select("*").eq("village_id", result.id).order("created_at", { ascending: false }).limit(10),
@@ -123,7 +154,7 @@ const VillageDetails = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [id, village, state, district, block]);
+  }, [id, village, state, district, block, setParams]);
 
   if (loading) {
     return (
@@ -133,6 +164,23 @@ const VillageDetails = () => {
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  if (noSelection) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <MapPin className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">Please Select a Village First</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Choose your state, district, block, and village to view detailed information.
+        </p>
+        <Link to="/">
+          <Button>Go to Select Region</Button>
+        </Link>
       </div>
     );
   }
