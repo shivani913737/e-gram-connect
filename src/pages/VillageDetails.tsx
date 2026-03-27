@@ -8,9 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
+  PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip
+} from "recharts";
+import {
   ArrowLeft, MapPin, Users, Droplets, Zap, GraduationCap, Activity,
   Building2, Route, Phone, User, ChevronRight, Landmark, TrendingUp,
-  Home, Wheat, IndianRupee
+  Home, Wheat, IndianRupee, AlertCircle
 } from "lucide-react";
 
 import sarpanchMale from "@/assets/officials/sarpanch-male.png";
@@ -44,8 +48,8 @@ const getOfficialImage = (designation: string, gender: string | null) => {
 const designationColor = (d: string) => {
   switch (d) {
     case "Sarpanch": return "bg-primary text-primary-foreground";
-    case "Up-Sarpanch": return "bg-accent text-accent-foreground";
-    case "Gram Sevak": return "bg-secondary text-secondary-foreground";
+    case "Up-Sarpanch": return "bg-secondary text-secondary-foreground";
+    case "Gram Sevak": return "bg-accent text-accent-foreground";
     default: return "bg-muted text-muted-foreground";
   }
 };
@@ -56,6 +60,11 @@ const categoryIcon: Record<string, string> = {
   roads: "🛣️", water: "💧", education: "📚", electricity: "⚡",
   sanitation: "🚽", health: "🏥", general: "📋",
 };
+
+const PIE_COLORS = [
+  "hsl(24, 80%, 50%)", "hsl(120, 30%, 35%)", "hsl(45, 80%, 55%)",
+  "hsl(200, 60%, 50%)", "hsl(340, 60%, 50%)", "hsl(280, 40%, 55%)", "hsl(160, 50%, 40%)"
+];
 
 const VillageDetails = () => {
   const [params, setParams] = useSearchParams();
@@ -121,27 +130,32 @@ const VillageDetails = () => {
     fetchAll();
   }, [id, village, state, district, block, setParams]);
 
+  /* Loading skeleton */
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-12 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12 space-y-6">
+        <Skeleton className="h-8 w-48 rounded-xl" />
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
-        <Skeleton className="h-64" />
+        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     );
   }
 
+  /* No village selected */
   if (noSelection) {
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <MapPin className="h-8 w-8 text-primary" />
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+          <MapPin className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-xl font-bold mb-2">Please Select a Village First</h2>
-        <p className="text-sm text-muted-foreground mb-6">Choose your state, district, block, and village to view detailed information.</p>
-        <Link to="/"><Button>Go to Select Region</Button></Link>
+        <h2 className="text-2xl font-bold mb-3">Please Select a Village First</h2>
+        <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+          Choose your state, district, block, and village to view detailed information about population, facilities, officials, and funds.
+        </p>
+        <Link to="/"><Button size="lg" className="rounded-xl px-8">Go to Select Region</Button></Link>
       </div>
     );
   }
@@ -152,15 +166,14 @@ const VillageDetails = () => {
     { icon: Users, label: "Population", value: data.population?.toLocaleString() ?? "—" },
     { icon: Home, label: "Households", value: households?.toLocaleString() ?? "—" },
     { icon: Zap, label: "Electricity", value: data.electricity_coverage != null ? `${data.electricity_coverage}%` : "—" },
-    { icon: GraduationCap, label: "Schools", value: String(data.schools ?? "—") },
-    { icon: Activity, label: "Health Centers", value: String(data.health_centers ?? "—") },
+    { icon: GraduationCap, label: "Schools", value: data.schools != null ? String(data.schools) : "—" },
+    { icon: Activity, label: "Health Centers", value: data.health_centers != null ? String(data.health_centers) : "—" },
   ] : [];
 
   const totalFunds = auditRecords.reduce((sum, r) => sum + (r.amount ?? 0), 0);
   const spentFunds = auditRecords.filter(r => r.status === "Completed" || r.status === "Disbursed").reduce((sum, r) => sum + (r.amount ?? 0), 0);
   const pendingFunds = totalFunds - spentFunds;
 
-  // Category breakdown for funds
   const categoryBreakdown = Object.entries(
     auditRecords.reduce<Record<string, { total: number; spent: number }>>((acc, r) => {
       if (!acc[r.category]) acc[r.category] = { total: 0, spent: 0 };
@@ -170,36 +183,47 @@ const VillageDetails = () => {
     }, {})
   ).sort((a, b) => b[1].total - a[1].total);
 
-  const maxCat = Math.max(...categoryBreakdown.map(([, v]) => v.total), 1);
+  const pieData = categoryBreakdown.map(([name, vals]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    value: vals.total
+  }));
+
+  const barData = categoryBreakdown.map(([name, vals]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    spent: vals.spent,
+    remaining: vals.total - vals.spent,
+  }));
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
-      <Link to="/"><Button variant="ghost" size="sm" className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button></Link>
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+      <Link to="/"><Button variant="ghost" size="sm" className="mb-4 rounded-xl"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button></Link>
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+      <div className="mb-8">
+        <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mb-2">
           <span>{data?.state ?? state}</span><ChevronRight className="h-3 w-3" />
           <span>{data?.district ?? district}</span><ChevronRight className="h-3 w-3" />
           <span>{data?.block ?? block}</span><ChevronRight className="h-3 w-3" />
           <span className="text-foreground font-medium">{data?.name ?? village}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <MapPin className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <MapPin className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{data?.name ?? village}</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">{data?.name ?? village}</h1>
             <p className="text-sm text-muted-foreground">{data?.block ?? block} Block, {data?.district ?? district} District</p>
           </div>
         </div>
       </div>
 
       {notFound ? (
-        <Card className="border-destructive/30">
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No detailed data found for <strong>{village || "this village"}</strong>.</p>
-            <Link to="/"><Button className="mt-4">Go to Region Selector</Button></Link>
+        <Card className="rounded-2xl border-destructive/30 shadow-md">
+          <CardContent className="py-12 text-center">
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive/60" />
+            <h3 className="text-lg font-semibold mb-2">Village Data Not Available</h3>
+            <p className="text-sm text-muted-foreground mb-6">We couldn't find detailed records for <strong>{village || "this village"}</strong>. Please try selecting another village.</p>
+            <Link to="/"><Button className="rounded-xl">Go to Region Selector</Button></Link>
           </CardContent>
         </Card>
       ) : (
@@ -207,20 +231,22 @@ const VillageDetails = () => {
           {/* Quick Stats */}
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-8">
             {stats.map((s) => (
-              <Card key={s.label} className="border-primary/10">
-                <CardContent className="pt-4 pb-3 text-center">
-                  <s.icon className="mx-auto mb-1.5 h-5 w-5 text-primary" />
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
-                  <p className="text-lg font-bold">{s.value}</p>
+              <Card key={s.label} className="rounded-2xl border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardContent className="p-4 text-center">
+                  <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <s.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
+                  <p className="text-xl font-bold">{s.value}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           {/* Location Hierarchy */}
-          <Card className="mb-8 overflow-hidden border-primary/10">
+          <Card className="mb-8 rounded-2xl border-0 shadow-md overflow-hidden">
             <CardContent className="p-0">
-              <div className="bg-secondary/5 p-6">
+              <div className="bg-muted/30 p-5 sm:p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold">Location & Hierarchy</h3>
@@ -233,17 +259,17 @@ const VillageDetails = () => {
                     { label: "Village", value: data?.name },
                   ].map((item, i) => (
                     <div key={item.label} className="flex items-center gap-2">
-                      <div className={`rounded-lg px-4 py-3 text-center ${i === 3 ? "bg-primary text-primary-foreground" : "bg-card border"}`}>
+                      <div className={`rounded-xl px-4 py-3 text-center ${i === 3 ? "bg-primary text-primary-foreground shadow-md" : "bg-card border shadow-sm"}`}>
                         <p className={`text-[10px] uppercase tracking-wider ${i === 3 ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{item.label}</p>
-                        <p className="font-semibold text-sm">{item.value}</p>
+                        <p className="font-semibold text-sm">{item.value ?? "—"}</p>
                       </div>
-                      {i < 3 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      {i < 3 && <ChevronRight className="h-4 w-4 text-muted-foreground hidden sm:block" />}
                     </div>
                   ))}
                 </div>
                 {data?.area_sq_km && (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Total area: <strong>{data.area_sq_km} sq. km</strong> • Road connectivity: <strong>{data.roads_km} km</strong>
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Total area: <strong>{data.area_sq_km} sq. km</strong> • Road connectivity: <strong>{data.roads_km ?? 0} km</strong>
                   </p>
                 )}
               </div>
@@ -252,33 +278,50 @@ const VillageDetails = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="people">People</TabsTrigger>
-              <TabsTrigger value="facilities">Facilities</TabsTrigger>
-              <TabsTrigger value="development">Development</TabsTrigger>
-              <TabsTrigger value="funds">Funds</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 rounded-xl h-auto p-1">
+              <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm py-2">Overview</TabsTrigger>
+              <TabsTrigger value="people" className="rounded-lg text-xs sm:text-sm py-2">People</TabsTrigger>
+              <TabsTrigger value="facilities" className="rounded-lg text-xs sm:text-sm py-2">Facilities</TabsTrigger>
+              <TabsTrigger value="development" className="rounded-lg text-xs sm:text-sm py-2 hidden sm:block">Development</TabsTrigger>
+              <TabsTrigger value="funds" className="rounded-lg text-xs sm:text-sm py-2 hidden sm:block">Funds</TabsTrigger>
             </TabsList>
+            {/* Extra row for mobile */}
+            <div className="grid grid-cols-2 gap-2 sm:hidden">
+              <Tabs defaultValue="overview">
+                <TabsList className="w-full rounded-xl h-auto p-1">
+                  <TabsTrigger value="development" className="rounded-lg text-xs w-full py-2"
+                    onClick={() => {
+                      const el = document.querySelector('[data-state="active"][value="development"]');
+                      if (!el) {
+                        // programmatic click on real tab
+                        const trigger = document.querySelector('button[value="development"]') as HTMLElement;
+                        trigger?.click();
+                      }
+                    }}
+                  >Development</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
             {/* Overview */}
             <TabsContent value="overview" className="space-y-4">
-              <Card>
+              <Card className="rounded-2xl border-0 shadow-md">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <Landmark className="h-4 w-4 text-primary" /> About {data?.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{data?.description || "No description available."}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{data?.description || "A vibrant rural village contributing to India's grassroots governance through its gram panchayat system."}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                     {[
                       { label: "Population", value: data?.population?.toLocaleString() ?? "—" },
                       { label: "Households", value: households?.toLocaleString() ?? "—" },
-                      { label: "Area", value: `${data?.area_sq_km ?? "—"} km²` },
+                      { label: "Area", value: data?.area_sq_km ? `${data.area_sq_km} km²` : "—" },
                       { label: "Density", value: data?.population && data?.area_sq_km ? `${Math.round(data.population / data.area_sq_km)} /km²` : "—" },
                     ].map(s => (
-                      <div key={s.label} className="rounded-lg border p-3">
-                        <p className="text-xs text-muted-foreground">{s.label}</p>
+                      <div key={s.label} className="rounded-xl border p-3 bg-muted/20">
+                        <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
                         <p className="text-lg font-bold">{s.value}</p>
                       </div>
                     ))}
@@ -287,16 +330,16 @@ const VillageDetails = () => {
                     <h4 className="text-sm font-semibold flex items-center gap-2 mb-3">
                       <Wheat className="h-4 w-4 text-primary" /> Agriculture & Resources
                     </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <div className="rounded-lg border p-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="rounded-xl border p-3 bg-muted/20">
                         <p className="text-xs text-muted-foreground">Main Crops</p>
                         <p className="text-sm font-medium">Rice, Wheat, Pulses</p>
                       </div>
-                      <div className="rounded-lg border p-3">
+                      <div className="rounded-xl border p-3 bg-muted/20">
                         <p className="text-xs text-muted-foreground">Irrigation</p>
                         <p className="text-sm font-medium">{data?.water_sources ?? 0} sources</p>
                       </div>
-                      <div className="rounded-lg border p-3">
+                      <div className="rounded-xl border p-3 bg-muted/20">
                         <p className="text-xs text-muted-foreground">Cultivable Land</p>
                         <p className="text-sm font-medium">{data?.area_sq_km ? (data.area_sq_km * 0.6).toFixed(1) : "—"} km²</p>
                       </div>
@@ -312,24 +355,30 @@ const VillageDetails = () => {
                 <User className="h-5 w-5 text-primary" /> Village Officials & Key Members
               </h3>
               {officials.length === 0 ? (
-                <Card><CardContent className="py-8 text-center text-muted-foreground">No officials data available yet.</CardContent></Card>
+                <Card className="rounded-2xl border-0 shadow-md">
+                  <CardContent className="py-12 text-center">
+                    <Users className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                    <p className="text-muted-foreground font-medium">No officials data available yet.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Official records will appear here once published.</p>
+                  </CardContent>
+                </Card>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {officials.map((o) => (
-                    <Card key={o.id} className="border-primary/10 hover:shadow-md transition-shadow overflow-hidden">
+                    <Card key={o.id} className="rounded-2xl border-0 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 overflow-hidden">
                       <CardContent className="p-0">
                         <div className={`px-4 py-3 ${designationColor(o.designation)}`}>
-                          <Badge variant="secondary" className="text-[10px] bg-background/20 text-inherit border-0">{o.designation}</Badge>
+                          <Badge variant="secondary" className="text-[10px] bg-background/20 text-inherit border-0 rounded-lg">{o.designation}</Badge>
                         </div>
                         <div className="p-4">
                           <div className="flex items-start gap-3">
                             <img src={getOfficialImage(o.designation, o.gender)} alt={o.name}
-                              className="h-16 w-16 rounded-full object-cover border-2 border-primary/20 shrink-0"
+                              className="h-16 w-16 rounded-xl object-cover border-2 border-primary/20 shrink-0"
                               loading="lazy" width={64} height={64} />
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold truncate">{o.name}</p>
                               <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
-                                {o.age && <span className="block">Age: <strong className="text-foreground">{o.age}</strong> • {o.gender}</span>}
+                                {o.age && <span className="block">Age: <strong className="text-foreground">{o.age}</strong> • {o.gender ?? ""}</span>}
                                 {o.education && <span className="block">📚 {o.education}</span>}
                               </div>
                             </div>
@@ -361,10 +410,10 @@ const VillageDetails = () => {
                   { icon: Route, label: "Road Network", value: `${data?.roads_km ?? 0} km`, desc: "Total paved and unpaved roads" },
                   { icon: Zap, label: "Electricity", value: `${data?.electricity_coverage ?? 0}%`, desc: "Household electrification coverage" },
                 ].map((f) => (
-                  <Card key={f.label} className="border-primary/10">
-                    <CardContent className="pt-5 flex items-start gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                        <f.icon className="h-5 w-5 text-primary" />
+                  <Card key={f.label} className="rounded-2xl border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="p-5 flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <f.icon className="h-6 w-6 text-primary" />
                       </div>
                       <div>
                         <p className="font-semibold">{f.label}</p>
@@ -383,31 +432,33 @@ const VillageDetails = () => {
                 <TrendingUp className="h-5 w-5 text-primary" /> Development Data
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5">
-                    <div className="flex items-center gap-2 mb-3"><Zap className="h-5 w-5 text-primary" /><span className="font-semibold">Electricity Coverage</span></div>
-                    <Progress value={data?.electricity_coverage ?? 0} className="h-3" />
-                    <p className="text-right text-sm font-bold text-primary mt-1">{data?.electricity_coverage ?? 0}%</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5">
-                    <div className="flex items-center gap-2 mb-3"><Droplets className="h-5 w-5 text-primary" /><span className="font-semibold">Water Supply Coverage</span></div>
-                    <Progress value={Math.min(100, (data?.water_sources ?? 0) * 8)} className="h-3" />
-                    <p className="text-right text-sm font-bold text-primary mt-1">{data?.water_sources ?? 0} active sources</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5">
+                {[
+                  { icon: Zap, label: "Electricity Coverage", value: data?.electricity_coverage ?? 0, suffix: "%", isProgress: true },
+                  { icon: Droplets, label: "Water Supply Coverage", value: Math.min(100, (data?.water_sources ?? 0) * 8), suffix: `${data?.water_sources ?? 0} active sources`, isProgress: true },
+                ].map((item) => (
+                  <Card key={item.label} className="rounded-2xl border-0 shadow-md">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <item.icon className="h-5 w-5 text-primary" />
+                        <span className="font-semibold">{item.label}</span>
+                      </div>
+                      <Progress value={item.value} className="h-3 rounded-full" />
+                      <p className="text-right text-sm font-bold text-primary mt-2">{item.isProgress ? `${item.value}%` : item.suffix}</p>
+                      {item.suffix && item.isProgress && <p className="text-right text-xs text-muted-foreground">{item.suffix}</p>}
+                    </CardContent>
+                  </Card>
+                ))}
+                <Card className="rounded-2xl border-0 shadow-md">
+                  <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3"><Route className="h-5 w-5 text-primary" /><span className="font-semibold">Road Connectivity</span></div>
-                    <p className="text-3xl font-bold text-primary">{data?.roads_km ?? "—"} km</p>
+                    <p className="text-4xl font-bold text-primary">{data?.roads_km ?? "—"} <span className="text-base font-normal text-muted-foreground">km</span></p>
                     <p className="text-xs text-muted-foreground mt-1">Total paved road network</p>
                   </CardContent>
                 </Card>
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5">
+                <Card className="rounded-2xl border-0 shadow-md">
+                  <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3"><MapPin className="h-5 w-5 text-primary" /><span className="font-semibold">Geographic Area</span></div>
-                    <p className="text-3xl font-bold text-primary">{data?.area_sq_km ?? "—"} km²</p>
+                    <p className="text-4xl font-bold text-primary">{data?.area_sq_km ?? "—"} <span className="text-base font-normal text-muted-foreground">km²</span></p>
                     <p className="text-xs text-muted-foreground mt-1">Total village area</p>
                   </CardContent>
                 </Card>
@@ -415,81 +466,130 @@ const VillageDetails = () => {
             </TabsContent>
 
             {/* Funds */}
-            <TabsContent value="funds" className="space-y-4">
+            <TabsContent value="funds" className="space-y-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <IndianRupee className="h-5 w-5 text-primary" /> Panchayat Funds
               </h3>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5 text-center">
-                    <p className="text-xs text-muted-foreground">Total Funds</p>
-                    <p className="text-xl font-bold text-primary">{totalFunds > 0 ? formatCurrency(totalFunds) : "—"}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5 text-center">
-                    <p className="text-xs text-muted-foreground">Spent</p>
-                    <p className="text-xl font-bold text-primary">{spentFunds > 0 ? formatCurrency(spentFunds) : "—"}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/10">
-                  <CardContent className="pt-5 text-center">
-                    <p className="text-xs text-muted-foreground">Remaining</p>
-                    <p className="text-xl font-bold text-muted-foreground">{pendingFunds > 0 ? formatCurrency(pendingFunds) : "—"}</p>
-                  </CardContent>
-                </Card>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+                {[
+                  { label: "Total Funds", value: totalFunds, color: "text-primary" },
+                  { label: "Spent", value: spentFunds, color: "text-secondary" },
+                  { label: "Remaining", value: pendingFunds, color: "text-muted-foreground" },
+                ].map(f => (
+                  <Card key={f.label} className="rounded-2xl border-0 shadow-md">
+                    <CardContent className="p-5 text-center">
+                      <p className="text-xs text-muted-foreground font-medium">{f.label}</p>
+                      <p className={`text-2xl font-bold ${f.color}`}>{f.value > 0 ? formatCurrency(f.value) : "—"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {totalFunds > 0 && (
-                <Card>
-                  <CardHeader><CardTitle className="text-base">Spending Utilization</CardTitle></CardHeader>
-                  <CardContent>
-                    <Progress value={totalFunds > 0 ? (spentFunds / totalFunds) * 100 : 0} className="h-3" />
-                    <p className="text-right text-sm text-muted-foreground mt-1">
-                      {totalFunds > 0 ? Math.round((spentFunds / totalFunds) * 100) : 0}% utilized
-                    </p>
+                <Card className="rounded-2xl border-0 shadow-md">
+                  <CardHeader className="pb-2"><CardTitle className="text-base">Spending Utilization</CardTitle></CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-end justify-between">
+                      <span className="text-3xl font-bold text-primary">{Math.round((spentFunds / totalFunds) * 100)}%</span>
+                      <span className="text-xs text-muted-foreground">{formatCurrency(spentFunds)} of {formatCurrency(totalFunds)}</span>
+                    </div>
+                    <Progress value={(spentFunds / totalFunds) * 100} className="h-3 rounded-full" />
                   </CardContent>
                 </Card>
               )}
 
+              {/* Charts */}
+              {pieData.length > 0 && (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <Card className="rounded-2xl border-0 shadow-md">
+                    <CardHeader className="pb-2"><CardTitle className="text-base">Fund Distribution</CardTitle></CardHeader>
+                    <CardContent>
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={45}
+                              outerRadius={80}
+                              paddingAngle={3}
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              labelLine={false}
+                            >
+                              {pieData.map((_, i) => (
+                                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl border-0 shadow-md">
+                    <CardHeader className="pb-2"><CardTitle className="text-base">Spent vs Remaining</CardTitle></CardHeader>
+                    <CardContent>
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={barData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                            <YAxis tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                            <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                            <Bar dataKey="spent" stackId="a" fill="hsl(120, 30%, 35%)" radius={[0, 0, 0, 0]} name="Spent" />
+                            <Bar dataKey="remaining" stackId="a" fill="hsl(24, 80%, 50%)" radius={[6, 6, 0, 0]} name="Remaining" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* Category-wise Spending */}
               {categoryBreakdown.length > 0 && (
-                <Card>
+                <Card className="rounded-2xl border-0 shadow-md">
                   <CardHeader><CardTitle className="text-base">Category-wise Spending</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
-                    {categoryBreakdown.map(([cat, vals]) => (
-                      <div key={cat} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="flex items-center gap-2 capitalize">
-                            {categoryIcon[cat] || "📋"} {cat}
-                          </span>
-                          <span className="font-semibold">{formatCurrency(vals.total)}</span>
+                    {categoryBreakdown.map(([cat, vals]) => {
+                      const pct = totalFunds > 0 ? Math.round((vals.total / totalFunds) * 100) : 0;
+                      return (
+                        <div key={cat} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-2 capitalize font-medium">
+                              {categoryIcon[cat] || "📋"} {cat}
+                              <Badge variant="outline" className="text-[10px] rounded-lg">{pct}%</Badge>
+                            </span>
+                            <span className="font-semibold">{formatCurrency(vals.total)}</span>
+                          </div>
+                          <Progress value={pct} className="h-2 rounded-full" />
                         </div>
-                        <Progress value={(vals.total / maxCat) * 100} className="h-2" />
-                      </div>
-                    ))}
+                      );
+                    })}
                   </CardContent>
                 </Card>
               )}
 
               {auditRecords.length > 0 ? (
-                <Card>
+                <Card className="rounded-2xl border-0 shadow-md">
                   <CardHeader><CardTitle className="text-base">Recent Expenditure Records</CardTitle></CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       {auditRecords.map((r) => (
-                        <div key={r.id} className="flex items-center justify-between rounded-lg border p-3">
+                        <div key={r.id} className="flex items-center justify-between rounded-xl border p-3 hover:bg-muted/30 transition-colors">
                           <div>
                             <p className="text-sm font-medium">{r.activity}</p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(r.created_at).toLocaleDateString("en-IN")} • 
+                              {new Date(r.created_at).toLocaleDateString("en-IN")} •
                               <span className="capitalize"> {categoryIcon[r.category] || ""} {r.category}</span>
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-bold">{r.amount ? formatCurrency(r.amount) : "—"}</p>
-                            <Badge variant={r.status === "Completed" || r.status === "Disbursed" ? "secondary" : "outline"} className="text-[10px]">{r.status}</Badge>
+                            <Badge variant={r.status === "Completed" || r.status === "Disbursed" ? "secondary" : "outline"} className="text-[10px] rounded-lg">{r.status}</Badge>
                           </div>
                         </div>
                       ))}
@@ -497,7 +597,12 @@ const VillageDetails = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <Card><CardContent className="py-8 text-center text-muted-foreground">No expenditure records available for this village yet.</CardContent></Card>
+                <Card className="rounded-2xl border-0 shadow-md">
+                  <CardContent className="py-12 text-center">
+                    <IndianRupee className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+                    <p className="text-muted-foreground font-medium">No expenditure records available for this village yet.</p>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
           </Tabs>
