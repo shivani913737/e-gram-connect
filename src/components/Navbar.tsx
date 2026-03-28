@@ -3,17 +3,20 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { to: "/", label: "Home" },
-    { to: "/about", label: "About Us" },
-    { to: "/schemes", label: "Schemes" },
+    { to: "/", label: t("nav.home") },
+    { to: "/about", label: t("nav.about") },
+    { to: "/schemes", label: t("nav.schemes") },
   ];
 
   const handleLogout = async () => {
@@ -30,7 +33,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -42,20 +45,21 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
+          <LanguageSwitcher />
           {user ? (
             <>
               <Link to="/dashboard">
-                <Button variant="outline" size="sm">Dashboard</Button>
+                <Button variant="outline" size="sm">{t("nav.dashboard")}</Button>
               </Link>
-              <Button size="sm" variant="ghost" onClick={handleLogout}>Logout</Button>
+              <Button size="sm" variant="ghost" onClick={handleLogout}>{t("nav.logout")}</Button>
             </>
           ) : (
             <>
               <Link to="/login">
-                <Button variant="outline" size="sm">Login</Button>
+                <Button variant="outline" size="sm">{t("nav.login")}</Button>
               </Link>
               <Link to="/signup">
-                <Button size="sm">Sign Up</Button>
+                <Button size="sm">{t("nav.signup")}</Button>
               </Link>
             </>
           )}
@@ -80,21 +84,24 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
+          <div className="py-2">
+            <LanguageSwitcher />
+          </div>
           <div className="mt-3 flex gap-2">
             {user ? (
               <>
                 <Link to="/dashboard" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">Dashboard</Button>
+                  <Button variant="outline" size="sm" className="w-full">{t("nav.dashboard")}</Button>
                 </Link>
-                <Button size="sm" className="flex-1" onClick={handleLogout}>Logout</Button>
+                <Button size="sm" className="flex-1" onClick={handleLogout}>{t("nav.logout")}</Button>
               </>
             ) : (
               <>
                 <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">Login</Button>
+                  <Button variant="outline" size="sm" className="w-full">{t("nav.login")}</Button>
                 </Link>
                 <Link to="/signup" className="flex-1" onClick={() => setMobileOpen(false)}>
-                  <Button size="sm" className="w-full">Sign Up</Button>
+                  <Button size="sm" className="w-full">{t("nav.signup")}</Button>
                 </Link>
               </>
             )}

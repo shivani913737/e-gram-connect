@@ -367,25 +367,33 @@ const VillageDetails = () => {
                   {officials.map((o) => (
                     <Card key={o.id} className="rounded-2xl border-0 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 overflow-hidden">
                       <CardContent className="p-0">
-                        <div className={`px-4 py-3 ${designationColor(o.designation)}`}>
-                          <Badge variant="secondary" className="text-[10px] bg-background/20 text-inherit border-0 rounded-lg">{o.designation}</Badge>
+                        <div className={`px-4 py-4 flex items-center gap-4 ${designationColor(o.designation)}`}>
+                          <img src={getOfficialImage(o.designation, o.gender)} alt={o.name}
+                            className="h-16 w-16 rounded-full object-cover border-3 border-background/40 shadow-md shrink-0"
+                            loading="lazy" width={64} height={64} />
+                          <div className="min-w-0">
+                            <p className="font-bold text-base truncate">{o.name}</p>
+                            <Badge variant="secondary" className="text-[10px] bg-background/20 text-inherit border-0 rounded-lg mt-1">{o.designation}</Badge>
+                          </div>
                         </div>
-                        <div className="p-4">
-                          <div className="flex items-start gap-3">
-                            <img src={getOfficialImage(o.designation, o.gender)} alt={o.name}
-                              className="h-16 w-16 rounded-xl object-cover border-2 border-primary/20 shrink-0"
-                              loading="lazy" width={64} height={64} />
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold truncate">{o.name}</p>
-                              <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
-                                {o.age && <span className="block">Age: <strong className="text-foreground">{o.age}</strong> • {o.gender ?? ""}</span>}
-                                {o.education && <span className="block">📚 {o.education}</span>}
+                        <div className="p-4 space-y-2.5">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {o.age && (
+                              <div className="rounded-lg bg-muted/40 p-2">
+                                <p className="text-muted-foreground">Age</p>
+                                <p className="font-semibold">{o.age} yrs • {o.gender ?? ""}</p>
                               </div>
-                            </div>
+                            )}
+                            {o.education && (
+                              <div className="rounded-lg bg-muted/40 p-2">
+                                <p className="text-muted-foreground">Education</p>
+                                <p className="font-semibold truncate">{o.education}</p>
+                              </div>
+                            )}
                           </div>
                           {o.contact && (
-                            <div className="mt-3 flex items-center gap-1.5 text-xs text-primary border-t pt-2">
-                              <Phone className="h-3 w-3" /><span>{o.contact}</span>
+                            <div className="flex items-center gap-2 text-xs text-primary bg-primary/5 rounded-lg px-3 py-2">
+                              <Phone className="h-3.5 w-3.5" /><span className="font-medium">{o.contact}</span>
                             </div>
                           )}
                         </div>
