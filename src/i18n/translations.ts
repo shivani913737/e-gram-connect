@@ -127,6 +127,22 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.title": "Gram Connect Help",
     "chat.placeholder": "Ask about villages, schemes, funds...",
     "chat.welcome": "Hello! I'm your Gram Connect assistant. Ask me about villages, government schemes, or fund details.",
+
+    // Feedback
+    "feedback.title": "Feedback & Complaints",
+    "feedback.subtitle": "Submit your suggestions, complaints, or feedback",
+    "feedback.total": "Total",
+    "feedback.pending": "Pending",
+    "feedback.resolved": "Resolved",
+    "feedback.submit": "Submit Feedback",
+    "feedback.namePlaceholder": "Your name",
+    "feedback.villagePlaceholder": "Village name",
+    "feedback.messagePlaceholder": "Write your feedback, complaint or suggestion...",
+    "feedback.sendBtn": "Submit",
+    "feedback.submitted": "Feedback Submitted",
+    "feedback.thankYou": "Thank you for your feedback!",
+    "feedback.recentTitle": "Recent Feedback",
+    "feedback.noFeedback": "No feedback submitted yet.",
   },
   hi: {
     "nav.home": "होम",
