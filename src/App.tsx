@@ -38,6 +38,7 @@ const App = () => (
               <Route path="/schemes" element={<Schemes />} />
               <Route path="/village" element={<VillageDetails />} />
               <Route path="/audit" element={<Audit />} />
+              <Route path="/feedback" element={<Feedback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Chatbot />
