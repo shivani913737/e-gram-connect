@@ -382,6 +382,21 @@ const translations: Record<Language, Record<string, string>> = {
     "chat.title": "ग्राम कनेक्ट मदत",
     "chat.placeholder": "गावे, योजना, निधीबद्दल विचारा...",
     "chat.welcome": "नमस्कार! मी तुमचा ग्राम कनेक्ट सहाय्यक आहे. मला गावे, सरकारी योजना किंवा निधी तपशीलांबद्दल विचारा.",
+
+    "feedback.title": "अभिप्राय आणि तक्रारी",
+    "feedback.subtitle": "तुमच्या सूचना, तक्रारी किंवा अभिप्राय सबमिट करा",
+    "feedback.total": "एकूण",
+    "feedback.pending": "प्रलंबित",
+    "feedback.resolved": "निराकरण",
+    "feedback.submit": "अभिप्राय द्या",
+    "feedback.namePlaceholder": "तुमचे नाव",
+    "feedback.villagePlaceholder": "गावाचे नाव",
+    "feedback.messagePlaceholder": "तुमचा अभिप्राय, तक्रार किंवा सूचना लिहा...",
+    "feedback.sendBtn": "सबमिट करा",
+    "feedback.submitted": "अभिप्राय सबमिट",
+    "feedback.thankYou": "तुमच्या अभिप्रायाबद्दल धन्यवाद!",
+    "feedback.recentTitle": "अलीकडील अभिप्राय",
+    "feedback.noFeedback": "अद्याप कोणताही अभिप्राय नाही.",
   },
 };
 
