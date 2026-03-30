@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Schemes from "./pages/Schemes";
 import VillageDetails from "./pages/VillageDetails";
 import Audit from "./pages/Audit";
+import Feedback from "./pages/Feedback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
