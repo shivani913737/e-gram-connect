@@ -13,7 +13,8 @@ import {
 } from "recharts";
 import {
   MapPin, FileText, BookOpen, LogOut, LayoutDashboard, Loader2,
-  Users, IndianRupee, Building2, Search, Bell, TrendingUp, ArrowRight
+  Users, IndianRupee, Building2, Search, Bell, TrendingUp, ArrowRight,
+  Award, AlertTriangle, BarChart3, CheckCircle2, Clock, MessageSquarePlus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -26,10 +27,19 @@ interface DashboardStats {
   categoryData: { name: string; value: number }[];
 }
 
+interface AnalyticsInsight {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+}
+
 const quickLinks = [
   { icon: MapPin, title: "Village Details", desc: "View and manage village information", to: "/village", color: "bg-primary/10 text-primary" },
   { icon: BookOpen, title: "Government Schemes", desc: "Browse available schemes", to: "/schemes", color: "bg-secondary/10 text-secondary" },
   { icon: FileText, title: "Audit / Records", desc: "View village records and activities", to: "/audit", color: "bg-accent/20 text-accent-foreground" },
+  { icon: MessageSquarePlus, title: "Feedback", desc: "Submit complaints or suggestions", to: "/feedback", color: "bg-primary/10 text-primary" },
 ];
 
 const notifications = [
@@ -50,6 +60,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [insights, setInsights] = useState<AnalyticsInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{ name: string; state: string; district: string; block: string; id: string }[]>([]);
@@ -62,13 +73,15 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
-      const [villagesRes, auditsRes, officialsRes] = await Promise.all([
+      const [villagesRes, auditsRes, officialsRes, villagesDataRes] = await Promise.all([
         supabase.from("villages").select("id", { count: "exact", head: true }),
-        supabase.from("audit_records").select("amount, status, category"),
+        supabase.from("audit_records").select("amount, status, category, village_id"),
         supabase.from("village_officials").select("id", { count: "exact", head: true }),
+        supabase.from("villages").select("name, population, electricity_coverage, schools, health_centers, roads_km, water_sources"),
       ]);
 
       const audits = auditsRes.data ?? [];
+      const villages = villagesDataRes.data ?? [];
       const totalFunds = audits.reduce((s: number, r: any) => s + (r.amount ?? 0), 0);
       const spentFunds = audits
         .filter((r: any) => r.status === "Completed" || r.status === "Disbursed")
@@ -82,6 +95,59 @@ const Dashboard = () => {
         .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }))
         .sort((a, b) => b.value - a.value);
 
+      // Analytics insights
+      const analyticsInsights: AnalyticsInsight[] = [];
+
+      // Most developed village (highest composite score)
+      if (villages.length > 0) {
+        const scored = villages.map(v => ({
+          name: v.name,
+          score: (v.electricity_coverage ?? 0) + (v.schools ?? 0) * 10 + (v.health_centers ?? 0) * 15 + (v.roads_km ?? 0) + (v.water_sources ?? 0) * 5,
+        }));
+        const best = scored.sort((a, b) => b.score - a.score)[0];
+        analyticsInsights.push({
+          icon: Award, label: "Most Developed Village", value: best.name,
+          sub: `Development score: ${best.score}`, color: "text-green-600",
+        });
+      }
+
+      // Least funded village
+      if (audits.length > 0) {
+        const villageFunds: Record<string, number> = {};
+        audits.forEach((a: any) => {
+          if (a.village_id) villageFunds[a.village_id] = (villageFunds[a.village_id] ?? 0) + (a.amount ?? 0);
+        });
+        const leastId = Object.entries(villageFunds).sort((a, b) => a[1] - b[1])[0];
+        if (leastId) {
+          const leastVillage = villages.find(v => true); // we need name from villages table
+          // Fetch least funded village name
+          const { data: lv } = await supabase.from("villages").select("name").eq("id", leastId[0]).single();
+          analyticsInsights.push({
+            icon: AlertTriangle, label: "Least Funded Village", value: lv?.name ?? "Unknown",
+            sub: `Total: ${formatCurrency(leastId[1])}`, color: "text-red-500",
+          });
+        }
+      }
+
+      // Top spending category
+      if (categoryData.length > 0) {
+        analyticsInsights.push({
+          icon: BarChart3, label: "Highest Spending Category", value: categoryData[0].name,
+          sub: formatCurrency(categoryData[0].value), color: "text-primary",
+        });
+      }
+
+      // Pending vs Completed
+      const completed = audits.filter((a: any) => a.status === "Completed" || a.status === "Disbursed").length;
+      const pendingCount = audits.filter((a: any) => a.status === "Pending" || a.status === "pending").length;
+      analyticsInsights.push({
+        icon: CheckCircle2, label: "Project Status",
+        value: `${completed} Completed`,
+        sub: `${pendingCount} Pending out of ${audits.length} total`,
+        color: "text-blue-600",
+      });
+
+      setInsights(analyticsInsights);
       setStats({
         totalVillages: villagesRes.count ?? 0,
         totalFunds,
@@ -175,6 +241,31 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Smart Analytics Insights */}
+      {!loading && insights.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" /> Smart Analytics
+          </h2>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {insights.map((ins, i) => (
+              <Card key={i} className="rounded-2xl border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                      <ins.icon className={`h-5 w-5 ${ins.color}`} />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium leading-tight">{ins.label}</p>
+                  </div>
+                  <p className="text-lg font-bold truncate">{ins.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{ins.sub}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Fund Utilization + Pie Chart */}
       {loading ? (
         <div className="grid gap-6 lg:grid-cols-2 mb-8">
@@ -204,7 +295,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Pie Chart */}
           <Card className="rounded-2xl border-0 shadow-md">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Fund Distribution by Category</CardTitle>
@@ -299,7 +389,7 @@ const Dashboard = () => {
       </Card>
 
       {/* Quick Links */}
-      <div className="grid gap-4 sm:grid-cols-3 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {quickLinks.map((item) => (
           <Link key={item.title} to={item.to}>
             <Card className="h-full rounded-2xl border-0 shadow-md cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5">

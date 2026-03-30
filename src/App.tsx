@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Schemes from "./pages/Schemes";
 import VillageDetails from "./pages/VillageDetails";
 import Audit from "./pages/Audit";
+import Feedback from "./pages/Feedback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/schemes" element={<Schemes />} />
               <Route path="/village" element={<VillageDetails />} />
               <Route path="/audit" element={<Audit />} />
+              <Route path="/feedback" element={<Feedback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Chatbot />
