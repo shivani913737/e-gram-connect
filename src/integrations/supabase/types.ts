@@ -55,6 +55,33 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+          status: string
+          village: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+          village: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+          village?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
