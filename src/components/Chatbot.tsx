@@ -147,13 +147,14 @@ const Chatbot = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const send = () => {
+  const send = async () => {
     const q = input.trim();
     if (!q) return;
     const userMsg: Message = { role: "user", text: q };
-    const botMsg: Message = { role: "bot", text: findAnswer(q) };
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    const answer = await findAnswer(q);
+    setMessages((prev) => [...prev, { role: "bot", text: answer }]);
   };
 
   return (
