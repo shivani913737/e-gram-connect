@@ -18,8 +18,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.logout": "Logout",
 
     // Index
-    "index.title": "Gram Connect —",
-    "index.brand": "E-Gram Panchayat",
+    "index.title": "",
+    "index.brand": "Gram Connect",
     "index.subtitle": "Empowering rural governance through digital connectivity. Access village details, government schemes, and public records.",
 
     // Region Selector
