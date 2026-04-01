@@ -112,8 +112,8 @@ const translations: Record<Language, Record<string, string>> = {
     "audit.noRecords": "No records match your filters.",
 
     // About
-    "about.title": "About E-Gram Panchayat",
-    "about.desc": "E-Gram Panchayat (Gram Connect) is a digital platform aimed at empowering rural governance. It provides easy access to village records, government schemes, and administrative tools for panchayat officials and citizens.",
+    "about.title": "About Gram Connect",
+    "about.desc": "Gram Connect is a digital platform aimed at empowering rural governance. It provides easy access to village records, government schemes, and administrative tools for panchayat officials and citizens.",
     "about.digitalGov": "Digital Governance",
     "about.digitalGovDesc": "Bringing transparency and accessibility to rural administration through technology.",
     "about.community": "Community First",
