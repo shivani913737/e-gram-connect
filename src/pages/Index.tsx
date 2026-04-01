@@ -17,7 +17,7 @@ const Index = () => {
       <div className="absolute inset-0 bg-background/40" />
       <div className="relative z-10">
         <h1 className="mb-6 text-center text-3xl font-bold text-foreground drop-shadow-lg md:text-4xl">
-          {t("index.title")} <span className="text-primary">{t("index.brand")}</span>
+          <span className="text-primary">{t("index.brand")}</span>
         </h1>
         <p className="mx-auto mb-8 max-w-lg text-center text-sm text-muted-foreground drop-shadow md:text-base">
           {t("index.subtitle")}
