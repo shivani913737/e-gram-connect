@@ -174,7 +174,7 @@ const Chatbot = () => {
           {/* Header */}
           <div className="bg-primary px-4 py-3 text-primary-foreground">
             <p className="font-semibold text-sm">{t("chat.title")}</p>
-            <p className="text-xs text-primary-foreground/70">E-Gram Panchayat</p>
+            <p className="text-xs text-primary-foreground/70">Gram Connect</p>
           </div>
 
           {/* Messages */}

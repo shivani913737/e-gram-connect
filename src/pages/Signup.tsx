@@ -50,7 +50,7 @@ const Signup = () => {
         <CardHeader className="text-center">
           <UserPlus className="mx-auto mb-2 h-8 w-8 text-primary" />
           <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create your E-Gram Panchayat account</CardDescription>
+          <CardDescription>Create your Gram Connect account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
