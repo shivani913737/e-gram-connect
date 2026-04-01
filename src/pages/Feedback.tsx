@@ -115,6 +115,7 @@ const Feedback = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input placeholder={t("feedback.namePlaceholder")} value={name} onChange={e => setName(e.target.value)} className="rounded-xl" required maxLength={100} />
               <Input placeholder={t("feedback.villagePlaceholder")} value={village} onChange={e => setVillage(e.target.value)} className="rounded-xl" required maxLength={100} />
+              <Input placeholder="Your email (optional)" type="email" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl" maxLength={255} />
               <Textarea placeholder={t("feedback.messagePlaceholder")} value={message} onChange={e => setMessage(e.target.value)} className="rounded-xl min-h-[100px]" required maxLength={1000} />
               <Button type="submit" className="w-full rounded-xl" disabled={submitting}>
                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
