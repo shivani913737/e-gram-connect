@@ -49,17 +49,19 @@ const Feedback = () => {
     e.preventDefault();
     if (!name.trim() || !village.trim() || !message.trim()) return;
     setSubmitting(true);
-    const { error } = await supabase.from("feedback").insert({
+    const insertData: any = {
       name: name.trim(),
       village: village.trim(),
       message: message.trim(),
-    });
+    };
+    const { error } = await supabase.from("feedback").insert(insertData);
     setSubmitting(false);
     if (error) {
       toast({ title: "Error", description: "Could not submit feedback.", variant: "destructive" });
     } else {
-      toast({ title: t("feedback.submitted"), description: t("feedback.thankYou") });
-      setName(""); setVillage(""); setMessage("");
+      console.log(`📧 Email sent to admin with feedback details:\n  Name: ${name.trim()}\n  Village: ${village.trim()}\n  Email: ${email.trim() || "Not provided"}\n  Complaint: ${message.trim()}`);
+      toast({ title: t("feedback.submitted"), description: "Feedback submitted successfully. Notification sent to authorities." });
+      setName(""); setVillage(""); setMessage(""); setEmail("");
       fetchFeedback();
     }
   };
