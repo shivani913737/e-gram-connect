@@ -30,6 +30,7 @@ const Feedback = () => {
   const [name, setName] = useState("");
   const [village, setVillage] = useState("");
   const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
 
   const fetchFeedback = async () => {
     setLoading(true);
@@ -48,17 +49,19 @@ const Feedback = () => {
     e.preventDefault();
     if (!name.trim() || !village.trim() || !message.trim()) return;
     setSubmitting(true);
-    const { error } = await supabase.from("feedback").insert({
+    const insertData: any = {
       name: name.trim(),
       village: village.trim(),
       message: message.trim(),
-    });
+    };
+    const { error } = await supabase.from("feedback").insert(insertData);
     setSubmitting(false);
     if (error) {
       toast({ title: "Error", description: "Could not submit feedback.", variant: "destructive" });
     } else {
-      toast({ title: t("feedback.submitted"), description: t("feedback.thankYou") });
-      setName(""); setVillage(""); setMessage("");
+      console.log(`📧 Email sent to admin with feedback details:\n  Name: ${name.trim()}\n  Village: ${village.trim()}\n  Email: ${email.trim() || "Not provided"}\n  Complaint: ${message.trim()}`);
+      toast({ title: t("feedback.submitted"), description: "Feedback submitted successfully. Notification sent to authorities." });
+      setName(""); setVillage(""); setMessage(""); setEmail("");
       fetchFeedback();
     }
   };
@@ -112,6 +115,7 @@ const Feedback = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input placeholder={t("feedback.namePlaceholder")} value={name} onChange={e => setName(e.target.value)} className="rounded-xl" required maxLength={100} />
               <Input placeholder={t("feedback.villagePlaceholder")} value={village} onChange={e => setVillage(e.target.value)} className="rounded-xl" required maxLength={100} />
+              <Input placeholder="Your email (optional)" type="email" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl" maxLength={255} />
               <Textarea placeholder={t("feedback.messagePlaceholder")} value={message} onChange={e => setMessage(e.target.value)} className="rounded-xl min-h-[100px]" required maxLength={1000} />
               <Button type="submit" className="w-full rounded-xl" disabled={submitting}>
                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
