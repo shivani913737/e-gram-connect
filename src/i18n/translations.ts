@@ -153,8 +153,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.signup": "साइन अप",
     "nav.logout": "लॉगआउट",
 
-    "index.title": "ग्राम कनेक्ट —",
-    "index.brand": "ई-ग्राम पंचायत",
+    "index.title": "",
+    "index.brand": "ग्राम कनेक्ट",
     "index.subtitle": "डिजिटल कनेक्टिविटी के माध्यम से ग्रामीण शासन को सशक्त बनाना। गाँव का विवरण, सरकारी योजनाएँ और सार्वजनिक रिकॉर्ड देखें।",
 
     "region.selectState": "राज्य चुनें",
