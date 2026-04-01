@@ -28,8 +28,8 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="E-Gram Panchayat Logo" className="h-10 w-10" />
-          <span className="text-lg font-bold text-primary">E-Gram Panchayat</span>
+          <img src={logo} alt="Gram Connect Logo" className="h-10 w-10" />
+          <span className="text-lg font-bold text-primary">Gram Connect</span>
         </Link>
 
         {/* Desktop */}

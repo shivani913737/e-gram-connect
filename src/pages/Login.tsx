@@ -38,7 +38,7 @@ const Login = () => {
         <CardHeader className="text-center">
           <LogIn className="mx-auto mb-2 h-8 w-8 text-primary" />
           <CardTitle>Login</CardTitle>
-          <CardDescription>Access your E-Gram Panchayat account</CardDescription>
+          <CardDescription>Access your Gram Connect account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">

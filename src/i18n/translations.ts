@@ -18,8 +18,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.logout": "Logout",
 
     // Index
-    "index.title": "Gram Connect —",
-    "index.brand": "E-Gram Panchayat",
+    "index.title": "",
+    "index.brand": "Gram Connect",
     "index.subtitle": "Empowering rural governance through digital connectivity. Access village details, government schemes, and public records.",
 
     // Region Selector
@@ -112,8 +112,8 @@ const translations: Record<Language, Record<string, string>> = {
     "audit.noRecords": "No records match your filters.",
 
     // About
-    "about.title": "About E-Gram Panchayat",
-    "about.desc": "E-Gram Panchayat (Gram Connect) is a digital platform aimed at empowering rural governance. It provides easy access to village records, government schemes, and administrative tools for panchayat officials and citizens.",
+    "about.title": "About Gram Connect",
+    "about.desc": "Gram Connect is a digital platform aimed at empowering rural governance. It provides easy access to village records, government schemes, and administrative tools for panchayat officials and citizens.",
     "about.digitalGov": "Digital Governance",
     "about.digitalGovDesc": "Bringing transparency and accessibility to rural administration through technology.",
     "about.community": "Community First",
@@ -153,8 +153,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.signup": "साइन अप",
     "nav.logout": "लॉगआउट",
 
-    "index.title": "ग्राम कनेक्ट —",
-    "index.brand": "ई-ग्राम पंचायत",
+    "index.title": "",
+    "index.brand": "ग्राम कनेक्ट",
     "index.subtitle": "डिजिटल कनेक्टिविटी के माध्यम से ग्रामीण शासन को सशक्त बनाना। गाँव का विवरण, सरकारी योजनाएँ और सार्वजनिक रिकॉर्ड देखें।",
 
     "region.selectState": "राज्य चुनें",
@@ -241,8 +241,8 @@ const translations: Record<Language, Record<string, string>> = {
     "audit.recordsFound": "रिकॉर्ड मिले",
     "audit.noRecords": "आपके फ़िल्टर से मेल खाने वाले कोई रिकॉर्ड नहीं हैं।",
 
-    "about.title": "ई-ग्राम पंचायत के बारे में",
-    "about.desc": "ई-ग्राम पंचायत (ग्राम कनेक्ट) ग्रामीण शासन को सशक्त बनाने के उद्देश्य से एक डिजिटल मंच है। यह पंचायत अधिकारियों और नागरिकों के लिए गाँव के रिकॉर्ड, सरकारी योजनाओं और प्रशासनिक उपकरणों तक आसान पहुँच प्रदान करता है।",
+    "about.title": "ग्राम कनेक्ट के बारे में",
+    "about.desc": "ग्राम कनेक्ट ग्रामीण शासन को सशक्त बनाने के उद्देश्य से एक डिजिटल मंच है। यह पंचायत अधिकारियों और नागरिकों के लिए गाँव के रिकॉर्ड, सरकारी योजनाओं और प्रशासनिक उपकरणों तक आसान पहुँच प्रदान करता है।",
     "about.digitalGov": "डिजिटल शासन",
     "about.digitalGovDesc": "प्रौद्योगिकी के माध्यम से ग्रामीण प्रशासन में पारदर्शिता और सुलभता लाना।",
     "about.community": "समुदाय पहले",
@@ -280,8 +280,8 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.signup": "साइन अप",
     "nav.logout": "लॉगआउट",
 
-    "index.title": "ग्राम कनेक्ट —",
-    "index.brand": "ई-ग्राम पंचायत",
+    "index.title": "",
+    "index.brand": "ग्राम कनेक्ट",
     "index.subtitle": "डिजिटल कनेक्टिव्हिटीद्वारे ग्रामीण शासन सक्षम करणे. गावाचे तपशील, सरकारी योजना आणि सार्वजनिक नोंदी पहा.",
 
     "region.selectState": "राज्य निवडा",
@@ -368,8 +368,8 @@ const translations: Record<Language, Record<string, string>> = {
     "audit.recordsFound": "नोंदी सापडल्या",
     "audit.noRecords": "तुमच्या फिल्टरशी जुळणाऱ्या कोणत्याही नोंदी नाहीत.",
 
-    "about.title": "ई-ग्राम पंचायत बद्दल",
-    "about.desc": "ई-ग्राम पंचायत (ग्राम कनेक्ट) हे ग्रामीण शासन सक्षम करण्याच्या उद्देशाने एक डिजिटल व्यासपीठ आहे. ते पंचायत अधिकारी आणि नागरिकांसाठी गावाच्या नोंदी, सरकारी योजना आणि प्रशासकीय साधनांमध्ये सहज प्रवेश प्रदान करते.",
+    "about.title": "ग्राम कनेक्ट बद्दल",
+    "about.desc": "ग्राम कनेक्ट हे ग्रामीण शासन सक्षम करण्याच्या उद्देशाने एक डिजिटल व्यासपीठ आहे. ते पंचायत अधिकारी आणि नागरिकांसाठी गावाच्या नोंदी, सरकारी योजना आणि प्रशासकीय साधनांमध्ये सहज प्रवेश प्रदान करते.",
     "about.digitalGov": "डिजिटल शासन",
     "about.digitalGovDesc": "तंत्रज्ञानाद्वारे ग्रामीण प्रशासनात पारदर्शकता आणि सुलभता आणणे.",
     "about.community": "समुदाय प्रथम",
