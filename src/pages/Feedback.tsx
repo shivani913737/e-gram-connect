@@ -30,6 +30,7 @@ const Feedback = () => {
   const [name, setName] = useState("");
   const [village, setVillage] = useState("");
   const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
 
   const fetchFeedback = async () => {
     setLoading(true);
